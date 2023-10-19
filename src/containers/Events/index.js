@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import EventCard from "../../components/EventCard";
 import Select from "../../components/Select";
 import { useData } from "../../contexts/DataContext";
@@ -13,21 +13,24 @@ const EventList = () => {
   const { data, error } = useData();
   const [type, setType] = useState();
   const [currentPage, setCurrentPage] = useState(1);
-  const filteredEvents = ((!type ? data?.events : data?.events) || [])
-    .filter((event) => !type || event.type === type)
-    .filter((event, index) => {
-      if (
-        (currentPage - 1) * PER_PAGE <= index &&
-        PER_PAGE * currentPage > index
-      ) {
-        return true;
-      }
-      return false;
-    });
+  const filteredEvents = useMemo(() => {
+    if (data) {
+      return data.events.filter((event) => !type || event.type === type)
+      .filter((event, index) => {
+        if (
+          (currentPage - 1) * PER_PAGE <= index &&
+          PER_PAGE * currentPage > index
+        ) {
+          return true;
+        }
+        return false;
+      })
+    } 
+    return []
+  }, [data, type, currentPage])
   const changeType = (evtType) => {
     setCurrentPage(1);
     setType(evtType);
-    console.log("le flitre est :", evtType);
   };
   const pageNumber = Math.floor((filteredEvents?.length || 0) / PER_PAGE) + 1;
   const typeList = new Set(data?.events.map((event) => event.type));
